@@ -27,7 +27,7 @@ Optionally change the model or set transcript saving by changing args here
 Supported models are `haiku`, `sonnet` and `opus`.
 
 ## Running
-Please run the code using the following code, allowing for 
+Please run the code using the following
 `/path/to/.venv/bin/python /path/to/youtube_summariser.py`
 
 ## Limitations
