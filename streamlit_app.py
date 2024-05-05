@@ -40,7 +40,7 @@ def run_script(video_urls, model, prompt, api_key):
     """
     Runs the main script of YouTube Summariser, this returns a dictionary containing the required values
     """
-    return main(video_urls, prompt, False, model, None, api_key)
+    return main(video_urls, prompt, model, api_key)
 
 def start_processing(video_urls, model, prompt, api_key):
     results = run_script(video_urls, model, prompt, api_key)
