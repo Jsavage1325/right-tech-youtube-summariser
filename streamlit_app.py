@@ -2,10 +2,13 @@ import json
 import zipfile
 from io import BytesIO
 import requests
+import hashlib
 
 import streamlit as st
 
 from youtube_summariser import main
+
+ACCESS_KEY = "2d9f7bda8178f04ac5b2b7daa3b59db5"  # Set your simple access password here
 
 # Constants
 API_KEY = '$2a$10$eQCkEq9KGPXNfF1sSV1T1.d0FCZCLg/Fsbx4pGKZShiJPsCW29Voy'  # Use your actual API key here
@@ -16,6 +19,26 @@ headers = {
     "Content-Type": "application/json",
     "X-Access-Key": API_KEY
 }
+
+def md5_hash(text):
+    """Return the MD5 hash of the input text."""
+    return hashlib.md5(text.encode()).hexdigest()
+
+def check_access_key():
+    """Simple access key check."""
+    if 'password' not in st.session_state:
+        pwd_placeholder = st.empty()
+        pwd = pwd_placeholder.text_input("Enter your access key:", type="password")
+        if st.button("Get Access"):
+            if md5_hash(pwd) == ACCESS_KEY:
+                st.session_state['password'] = pwd
+                pwd_placeholder.empty()  # Clear the password input
+                return True
+            else:
+                st.error("Incorrect password, please try again.")
+                return False
+        return False
+    return True
 
 def fetch_data():
     response = requests.get(f"{API_URL}/latest", headers=headers)
@@ -51,33 +74,34 @@ def start_processing(video_urls, model, prompt, api_key):
             zip_file.writestr(filename, filedata)
     return zip_buffer
 
-# Initialize Streamlit layout
-st.title("YouTube Video Summarizer")
-default_prompt, default_urls = fetch_data()
-video_urls = st.text_area("Enter Video URLs, one per line:", value=default_urls)
-model = st.selectbox("Choose Model:", ["haiku", "sonnet", "opus"])
-prompt = st.text_area("Enter Prompt:", value=default_prompt)
-api_key = st.text_input("Enter API Key:", type="password")
+if check_access_key():
+    # Initialize Streamlit layout
+    st.title("YouTube Video Summarizer")
+    default_prompt, default_urls = fetch_data()
+    video_urls = st.text_area("Enter Video URLs, one per line:", value=default_urls)
+    model = st.selectbox("Choose Model:", ["haiku", "sonnet", "opus"])
+    prompt = st.text_area("Enter Prompt:", value=default_prompt)
+    api_key = st.text_input("Enter API Key:", type="password")
 
-if st.button("Save Changes"):
-    save_data(prompt, video_urls)
-    st.success("Changes saved successfully!")
+    if st.button("Save Changes"):
+        save_data(prompt, video_urls)
+        st.success("Changes saved successfully!")
 
-if st.button("Start Processing"):
-    if not video_urls.strip():
-        st.warning("Please enter at least one video URL.")
-    elif not api_key.strip():
-        st.warning("Please enter your API Key.")
-    else:
-        video_url_list = video_urls.split()
-        zip_buffer = start_processing(video_url_list, model, prompt, api_key)
-        st.success("Processing complete! Downloading results...")
-        # Download the ZIP file
-        st.download_button(
-            label="Download Results",
-            data=zip_buffer.getvalue(),
-            file_name="summarized_videos.zip",
-            mime="application/zip"
-        )
+    if st.button("Start Processing"):
+        if not video_urls.strip():
+            st.warning("Please enter at least one video URL.")
+        elif not api_key.strip():
+            st.warning("Please enter your API Key.")
+        else:
+            video_url_list = video_urls.split()
+            zip_buffer = start_processing(video_url_list, model, prompt, api_key)
+            st.success("Processing complete! Downloading results...")
+            # Download the ZIP file
+            st.download_button(
+                label="Download Results",
+                data=zip_buffer.getvalue(),
+                file_name="summarized_videos.zip",
+                mime="application/zip"
+            )
 
-st.button("Quit", on_click=st.stop)
+    st.button("Quit", on_click=st.stop)
