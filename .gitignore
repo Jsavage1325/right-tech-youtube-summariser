@@ -5,3 +5,9 @@ __pycache__/
 
 summaries/
 transcripts/
+
+build/
+dist/
+*.txt
+.DS_Store
+YouTube Summariser App.spec
